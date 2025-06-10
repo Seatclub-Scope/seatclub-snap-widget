@@ -23,7 +23,7 @@ xcodebuild clean archive \
   -archivePath "../../build/SeatclubApp-iOS" \
   SKIP_INSTALL=NO \
   BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-  IPHONEOS_DEPLOYMENT_TARGET=13.0
+  IPHONEOS_DEPLOYMENT_TARGET=17.0
 
 # Step 4: Build for iOS Simulator
 echo "🔨 Building for iOS Simulator..."
@@ -34,7 +34,7 @@ xcodebuild clean archive \
   -archivePath "../../build/SeatclubApp-Simulator" \
   SKIP_INSTALL=NO \
   BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
-  IPHONEOS_DEPLOYMENT_TARGET=13.0
+  IPHONEOS_DEPLOYMENT_TARGET=17.0
 
 # Step 5: Navigate back to project root
 cd ../..

@@ -40,7 +40,7 @@ public class SeatclubWidget {
 }
 
 // MARK: - SwiftUI Support
-@available(iOS 13.0, *)
+@available(iOS 17.0, *)
 public struct SeatclubWidgetView: UIViewControllerRepresentable {
     let theme: String
     let title: String
