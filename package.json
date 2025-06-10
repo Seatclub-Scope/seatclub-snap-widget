@@ -1,24 +1,24 @@
 {
-  "name": "seatclub-app",
+  "name": "seatclubapp",
   "version": "1.0.0",
-  "description": "SeatclubApp React Native Widget Pod",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "build": "./build-bundle.sh",
-    "build-framework": "./build-framework.sh"
+    "start": "react-native start",
+    "bundle:ios": "react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/SeatclubApp/SeatclubApp/SeatclubApp/seatclub-app.jsbundle --assets-dest ios/SeatclubApp/SeatclubApp/SeatclubApp/ --reset-cache"
   },
   "dependencies": {
-    "react": "18.2.0",
-    "react-native": "0.72.7"
+    "react": "^18.2.0",
+    "react-native": "^0.73.0"
   },
-  "author": "Taylor Conlin",
-  "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.27.4",
-    "@babel/runtime": "^7.27.6",
-    "@react-native/metro-config": "^0.79.3",
-    "metro": "^0.82.4",
-    "metro-config": "^0.82.4",
+    "@babel/core": "^7.20.0",
+    "@babel/preset-env": "^7.20.0",
+    "@babel/runtime": "^7.20.0",
+    "@react-native/babel-preset": "^0.73.0",
+    "@react-native/metro-config": "^0.73.0",
     "metro-react-native-babel-preset": "^0.77.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
