@@ -7,12 +7,7 @@ public class SeatclubWidget {
     public init() {}
     
     @objc public func createViewController(theme: String = "light", title: String = "Welcome to SeatClub!") -> UIViewController {
-        let props = [
-            "theme": theme,
-            "title": title
-        ]
-        
-        let rootView = reactBridge.createRootView(moduleName: "SeatclubApp", props: props)
+        let rootView = reactBridge.createRootView()
         
         let viewController = UIViewController()
         viewController.view = rootView
@@ -25,7 +20,7 @@ public class SeatclubWidget {
     }
     
     @objc public func createViewController(with props: [String: Any]) -> UIViewController {
-        let rootView = reactBridge.createRootView(moduleName: "SeatclubApp", props: props)
+        let rootView = reactBridge.createRootView()
         
         let viewController = UIViewController()
         viewController.view = rootView

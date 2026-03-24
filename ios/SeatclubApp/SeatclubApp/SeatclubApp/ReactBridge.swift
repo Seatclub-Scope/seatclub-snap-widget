@@ -97,31 +97,6 @@ internal class ReactBridge {
         // Also set up the function directly for different calling patterns
         context.setObject(turboModuleProxy, forKeyedSubscript: "turboModuleProxy" as NSString)
         
-        // TEST: Verify TurboModuleRegistry works
-        let testScript = """
-        (function() {
-            console.log('🔍 Testing TurboModuleRegistry...');
-            try {
-                if (typeof TurboModuleRegistry !== 'undefined' && TurboModuleRegistry.getEnforcing) {
-                    var testModule = TurboModuleRegistry.getEnforcing('UIManager');
-                    console.log('✅ TurboModuleRegistry.getEnforcing works');
-                    return true;
-                } else {
-                    console.log('❌ TurboModuleRegistry.getEnforcing not available');
-                    return false;
-                }
-            } catch (e) {
-                console.log('❌ TurboModuleRegistry test failed: ' + e.message);
-                return false;
-            }
-        })()
-        """
-        
-        let testResult = context.evaluateScript(testScript)
-        if testResult?.toBool() != true {
-            print("❌ TurboModuleRegistry test failed - modules won't load properly")
-        }
-        
         // Basic timing
         let setTimeout: @convention(block) (JSValue, Double) -> Void = { callback, delay in
             DispatchQueue.main.asyncAfter(deadline: .now() + delay / 1000.0) {
@@ -156,202 +131,51 @@ internal class ReactBridge {
         
         let checkScript = """
         (function() {
-            console.log('🔍 Checking for AppRegistry...');
-            
-            // First check if it's already global
+            // Check if AppRegistry is already global
             if (typeof AppRegistry !== 'undefined') {
-                console.log('✅ AppRegistry found globally');
                 return true;
             }
             
             // Check if Metro require system exists
             if (typeof __r === 'function') {
-                console.log('✅ Metro require system found');
-                
-                // Try to find AppRegistry by searching modules
-                console.log('🔍 Searching modules for AppRegistry...');
+                // Search modules for AppRegistry
                 for (var i = 0; i < 200; i++) {
                     try {
                         var mod = __r(i);
                         
-                        // Log what we find for debugging
-                        if (mod && typeof mod === 'object') {
-                            var keys = Object.keys(mod);
-                            if (keys.length > 0) {
-                                console.log('Module ' + i + ' has: ' + keys.slice(0, 3).join(', ') + (keys.length > 3 ? '...' : ''));
-                            }
-                        }
-                        
                         // Check if this module has AppRegistry
                         if (mod && mod.AppRegistry && mod.AppRegistry.registerComponent) {
-                            console.log('✅ Found AppRegistry in module ' + i);
                             global.AppRegistry = mod.AppRegistry;
                             
-                            // Execute index.js if we haven't already
                             try {
-                                console.log('📦 Executing index.js (module 0)...');
                                 __r(0);
-                                console.log('✅ Executed index.js');
                             } catch (e) {
-                                console.log('⚠️ Could not execute index.js: ' + e.message);
+                                // Could not execute index.js
                             }
                             
-                            // Check if our app is registered
-                            if (mod.AppRegistry._registry && mod.AppRegistry._registry['SeatclubApp']) {
-                                console.log('✅ SeatclubApp is registered!');
-                                return true;
-                            } else {
-                                console.log('📋 Available apps: ' + Object.keys(mod.AppRegistry._registry || {}));
-                                return true; // AppRegistry exists, that's good enough
-                            }
+                            return true;
                         }
                         
                         // Check if this module has registerComponent directly
                         if (mod && mod.registerComponent) {
-                            console.log('✅ Found registerComponent in module ' + i);
                             global.AppRegistry = mod;
                             
                             try {
-                                console.log('📦 Executing index.js (module 0)...');
                                 __r(0);
-                                console.log('✅ Executed index.js');
                             } catch (e) {
-                                console.log('⚠️ Could not execute index.js: ' + e.message);
+                                // Could not execute index.js
                             }
                             
                             return true;
                         }
                         
-                        // Special check for module 133 which has _registry
-                        if (i === 133 && mod && mod._registry) {
-                            console.log('✅ Found _registry in module 133, likely AppRegistry');
-                            console.log('Module 133 keys: ' + Object.keys(mod).join(', '));
-                            
-                            // This module likely IS AppRegistry, let's check if it has the methods
-                            if (mod.registerComponent) {
-                                console.log('✅ Module 133 has registerComponent - this is AppRegistry!');
-                                global.AppRegistry = mod;
-                                
-                                try {
-                                    console.log('📦 Executing index.js (module 0)...');
-                                    __r(0);
-                                    console.log('✅ Executed index.js');
-                                    
-                                    // Check if our app is registered
-                                    if (mod._registry && mod._registry['SeatclubApp']) {
-                                        console.log('✅ SeatclubApp is registered!');
-                                        return true;
-                                    } else {
-                                        console.log('📋 Available apps: ' + Object.keys(mod._registry || {}));
-                                        return true; // AppRegistry exists
-                                    }
-                                } catch (e) {
-                                    console.log('⚠️ Could not execute index.js: ' + e.message);
-                                }
-                                
-                                return true;
-                            } else {
-                                console.log('⚠️ Module 133 does not have registerComponent');
-                                console.log('Module 133 methods: ' + Object.keys(mod).filter(k => typeof mod[k] === 'function').join(', '));
-                                
-                                // Maybe this module exports AppRegistry differently
-                                if (mod.default && mod.default.registerComponent) {
-                                    console.log('✅ Found registerComponent in mod.default');
-                                    global.AppRegistry = mod.default;
-                                    
-                                    try {
-                                        __r(0);
-                                        return true;
-                                    } catch (e) {
-                                        console.log('⚠️ Error executing index.js: ' + e.message);
-                                    }
-                                }
-                            }
-                        }
-                        
                     } catch (e) {
-                        // Continue searching, but log major errors
-                        if (e.message && e.message.indexOf('AppRegistry') > -1) {
-                            console.log('Module ' + i + ' error: ' + e.message);
-                        }
+                        // Continue searching
                     }
-                }
-                
-                console.log('❌ Could not find AppRegistry in any module');
-                
-                // Final attempt - try to load specific modules that might contain AppRegistry
-                var suspectedModules = [137, 158]; // From your bundle analysis
-                for (var j = 0; j < suspectedModules.length; j++) {
-                    try {
-                        var modId = suspectedModules[j];
-                        console.log('🔄 Final attempt: checking module ' + modId);
-                        var finalMod = __r(modId);
-                        
-                        if (finalMod) {
-                            console.log('Module ' + modId + ' contents: ' + Object.keys(finalMod).join(', '));
-                            
-                            // Check if this is AppRegistry
-                            if (finalMod.registerComponent || (finalMod.default && finalMod.default.registerComponent)) {
-                                var appReg = finalMod.registerComponent ? finalMod : finalMod.default;
-                                console.log('✅ Found AppRegistry in module ' + modId);
-                                global.AppRegistry = appReg;
-                                
-                                try {
-                                    __r(0);
-                                    console.log('✅ Executed index.js from final attempt');
-                                    return true;
-                                } catch (e) {
-                                    console.log('⚠️ Error in final attempt: ' + e.message);
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.log('❌ Final attempt module ' + suspectedModules[j] + ' failed: ' + e.message);
-                    }
-                }
-                
-                // Absolute final attempt - create our own AppRegistry
-                console.log('🔄 Creating manual AppRegistry...');
-                try {
-                    global.AppRegistry = {
-                        _registry: {},
-                        registerComponent: function(appKey, componentProvider) {
-                            console.log('📱 Registering component: ' + appKey);
-                            this._registry[appKey] = {
-                                componentProvider: componentProvider,
-                                run: function() { console.log('Running ' + appKey); }
-                            };
-                            return appKey;
-                        },
-                        getAppKeys: function() {
-                            return Object.keys(this._registry);
-                        }
-                    };
-                    
-                    console.log('✅ Manual AppRegistry created');
-                    
-                    // Now try to execute index.js
-                    try {
-                        __r(0);
-                        console.log('✅ Executed index.js with manual AppRegistry');
-                        
-                        if (global.AppRegistry._registry['SeatclubApp']) {
-                            console.log('✅ SeatclubApp registered with manual AppRegistry!');
-                            return true;
-                        } else {
-                            console.log('📋 Manual registry contents: ' + Object.keys(global.AppRegistry._registry));
-                            return true; // We have AppRegistry, that's enough
-                        }
-                    } catch (e) {
-                        console.log('❌ Error executing index.js with manual AppRegistry: ' + e.message);
-                    }
-                } catch (e) {
-                    console.log('❌ Failed to create manual AppRegistry: ' + e.message);
                 }
                 
                 return false;
             } else {
-                console.log('❌ Metro require system not found');
                 return false;
             }
         })()
@@ -367,15 +191,15 @@ internal class ReactBridge {
         }
     }
     
-    func createRootView(moduleName: String, props: [String: Any]?) -> UIView {
+    func createRootView() -> UIView {
         if isReactNativeLoaded {
-            return createReactNativeView(props: props)
+            return createReactNativeView()
         } else {
             return createErrorView()
         }
     }
     
-    private func createReactNativeView(props: [String: Any]?) -> UIView {
+    private func createReactNativeView() -> UIView {
         let containerView = UIView()
         containerView.backgroundColor = .systemBackground
         
