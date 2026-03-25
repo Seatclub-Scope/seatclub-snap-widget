@@ -6,7 +6,7 @@ public class SeatclubWidget {
     
     public init() {}
     
-    @objc public func createViewController(theme: String = "light", title: String = "Welcome to SeatClub!") -> UIViewController {
+    @objc public func createViewController(title: String = "Welcome to SeatClub!") -> UIViewController {
         let rootView = reactBridge.createRootView()
         
         let viewController = UIViewController()
@@ -37,18 +37,15 @@ public class SeatclubWidget {
 // MARK: - SwiftUI Support
 @available(iOS 17.0, *)
 public struct SeatclubWidgetView: UIViewControllerRepresentable {
-    let theme: String
     let title: String
     let customProps: [String: Any]?
     
-    public init(theme: String = "light", title: String = "Welcome to SeatClub!") {
-        self.theme = theme
+    public init(title: String = "Welcome to SeatClub!") {
         self.title = title
         self.customProps = nil
     }
     
     public init(props: [String: Any]) {
-        self.theme = props["theme"] as? String ?? "light"
         self.title = props["title"] as? String ?? "Welcome to SeatClub!"
         self.customProps = props
     }
@@ -59,7 +56,7 @@ public struct SeatclubWidgetView: UIViewControllerRepresentable {
         if let customProps = customProps {
             return widget.createViewController(with: customProps)
         } else {
-            return widget.createViewController(theme: theme, title: title)
+            return widget.createViewController(title: title)
         }
     }
     
@@ -70,9 +67,9 @@ public struct SeatclubWidgetView: UIViewControllerRepresentable {
 
 // MARK: - Objective-C Compatibility
 @objc public class SeatclubWidgetObjC: NSObject {
-    @objc public static func createViewController(theme: String, title: String) -> UIViewController {
+    @objc public static func createViewController(title: String) -> UIViewController {
         let widget = SeatclubWidget()
-        return widget.createViewController(theme: theme, title: title)
+        return widget.createViewController(title: title)
     }
     
     @objc public static func createViewController(props: [String: Any]) -> UIViewController {
